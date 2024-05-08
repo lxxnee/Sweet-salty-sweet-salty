@@ -1,22 +1,27 @@
 <?php
+
 namespace controller;
 
 use model\BoardsModel;
 
-class BoardController extends controller{
+class BoardController extends controller
+{
     protected $arrBoardList = [];
     private $boardType = "0"; // 보드 타입
 
     // boardType getter
-    public function getBoardType() {
+    public function getBoardType()
+    {
         return $this->boardType;
     }
     // boardType setter
-    public function setBoardType($boardType) {
+    public function setBoardType($boardType)
+    {
         $this->boardType = $boardType;
     }
     // 게시글 리스트
-    protected function listGet() {
+    protected function listGet()
+    {
         // 보드 타입 확인
         $requestData = [
             "b_type" => isset($_GET["b_type"]) ? $_GET["b_type"] : "0"
@@ -29,8 +34,8 @@ class BoardController extends controller{
         // TODO : 유효성 체크는 시간남으면 도전해보세요.
 
         // 페이지 제목
-        foreach($this->arrBoardsNameInfo as $item) {
-            if($item["b_type"] === $requestData["b_type"]) {
+        foreach ($this->arrBoardsNameInfo as $item) {
+            if ($item["b_type"] === $requestData["b_type"]) {
                 $this->boardName = $item["bn_name"];
                 break;
             }
@@ -48,38 +53,35 @@ class BoardController extends controller{
     }
 
     // 게시글 작성
-    public function addPost() {
+    public function addPost()
+    {
         // 이미지 파일 처리
         $path = "";
-        if(!empty($_FILES["img"]["name"])) {
-            $path = "/"._PATH_IMG.$_FILES["img"]["name"];
-            move_uploaded_file($_FILES["img"]["tmp_name"], _ROOT.$path);
-
+        if (!empty($_FILES["img"]["name"])) {
+            $path = "/" . _PATH_IMG . $_FILES["img"]["name"];
+            move_uploaded_file($_FILES["img"]["tmp_name"], _ROOT . $path);
         }
 
 
         $requestData = [
-            "b_type"     => $_POST["b_type"]
-            ,"b_title"   => $_POST["b_title"]
-            ,"b_content" => $_POST["b_content"]
-            ,"b_img"     => $path
-            ,"u_id"      => $_SESSION["u_id"]
+            "b_type"     => $_POST["b_type"], "b_title"   => $_POST["b_title"], "b_content" => $_POST["b_content"], "b_img"     => $path, "u_id"      => $_SESSION["u_id"]
         ];
 
         // 글작성 처리
         $modelBoards = new BoardsModel();
         $modelBoards->beginTransaction(); // 트랜잭션 시작
-        if($modelBoards->addBoard($requestData) === 1){
+        if ($modelBoards->addBoard($requestData) === 1) {
             $modelBoards->commit();
         } else {
             $modelBoards->rollBack();
         }
 
-        return "Location: /board/list?b_type=".$requestData["b_type"];
+        return "Location: /board/list?b_type=" . $requestData["b_type"];
     }
 
     // 상세 정보 조회
-    public function detailGet() {
+    public function detailGet()
+    {
         $requestData = [
             "b_id" => $_GET["b_id"]
         ];
@@ -98,6 +100,35 @@ class BoardController extends controller{
         // response 처리
         header('Content-type: application/json');
         echo $response;
+        exit;
+    }
+
+    // 삭제처리
+    protected function deletePost()
+    {
+        $requestData = [
+            "b_id" => $_POST["b_id"], "u_id" => $_POST["u_id"]
+        ];
+
+        $arrResponse = [
+            "errorFlg" => false, "errorMsg" => "", "b_id" => 0
+        ];
+
+        $modelBoards = new BoardsModel();
+        $modelBoards->beginTransaction();
+        $resultDelete = $modelBoards->deleteBoard($requestData);
+
+        if ($resultDelete !== 1) {
+            $arrResponse["errorFlg"] = true;
+            $arrResponse["errorMsg"] = '삭제처리 이상';
+            $modelBoards->rollBack();
+        } else {
+            $arrResponse["b_id"] = $requestData["b_id"];
+            $modelBoards->commit();
+        }
+
+        header("content-type: application/json");
+        echo json_encode($arrResponse);
         exit;
     }
 }

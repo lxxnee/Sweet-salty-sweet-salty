@@ -69,6 +69,17 @@ class Router
             if ($httpMethod === "GET") {
                 new BoardController("listGet");
             }
+        } else if ($url === "board/delete") {
+            if ($httpMethod === "POST") {
+                new BoardController("deletePost");
+            }
+        } else if($url === "user/edit") {
+            // 회원 정보 수정
+            if($httpMethod === "GET"){
+                new UserController("editGet");
+            } else {
+                new UserController("editPost");
+            }
         }
 
         // 예외 처리

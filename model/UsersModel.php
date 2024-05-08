@@ -56,5 +56,26 @@ class UsersModel extends Model {
             exit;
         }
     }
+
+    // 유저 정보 업데이트
+    public function updateUserInfo($paramArr) {
+        try {
+            $sql = 
+            " UPDATE users "
+            ." SET "
+            ." u_name =:u_name "
+            ." ,u_pw =:u_pw "
+            ." ,updated_at = NOW() "
+            ." WHERE "
+            ." u_id =:u_id "
+            ;
+            $stmt = $this->conn->prepare($sql);
+            $stmt->execute($paramArr);
+            return $stmt->rowCount();
+        } catch (\Throwable $e) {
+            echo "UsersModel-> updateUserInfo(), ".$e->getMessage();
+            exit;
+        }
+    }
 }
 
